@@ -48,24 +48,20 @@ end
 
 return {
 	"snacks.nvim",
+	priority = 1000,
 	opts = {
 
 		terminal = {
 			enabled = true,
 		},
 		indent = {
-			enabled = true,
+			enabled = false,
 			filter = function(buf)
-				return vim.g.snacks_indent ~= false
-					and vim.b[buf].snacks_indent ~= false
-					and vim.bo[buf].buftype == ""
-					and (
-						not vim.tbl_contains({
-							"lazy",
-							"help",
-							"markdown",
-						}, vim.bo[buf].filetype)
-					)
+				return vim.g.snacks_indent ~= false and vim.b[buf].snacks_indent ~= false and vim.bo[buf].buftype == "" and (not vim.tbl_contains({
+					"lazy",
+					"help",
+					"markdown",
+				}, vim.bo[buf].filetype))
 				--  vim.bo[buf].buftype ~= "markdown"
 			end,
 			only_scope = false,
@@ -173,12 +169,6 @@ return {
 			},
 			convert = {
 				notify = true, -- show a notification on error
-				math = {
-					font_size = "Large", -- see https://www.sascha-frank.com/latex-font-size.html
-					-- for latex documents, the doc packages are included automatically,
-					-- but you can add more packages here. Useful for markdown documents.
-					packages = { "amsmath", "amssymb", "amsfonts", "amscd", "mathtools" },
-				},
 				mermaid = function()
 					local theme = vim.o.background == "light" and "neutral" or "dark"
 					return { "-i", "{src}", "-o", "{file}", "-b", "transparent", "-t", theme, "-s", "{scale}" }
@@ -188,6 +178,15 @@ return {
 					vector = { "-density", 192, "{src}[0]" }, -- used by vector images like svg
 					math = { "-density", 192, "{src}[0]", "-trim" },
 					pdf = { "-density", 192, "{src}[0]", "-background", "white", "-alpha", "remove", "-trim" },
+				},
+			},
+			math = {
+				enabled = true,
+				latex = {
+					font_size = "Large", -- see https://www.sascha-frank.com/latex-font-size.html
+					-- for latex documents, the doc packages are included automatically,
+					-- but you can add more packages here. Useful for markdown documents.
+					packages = { "amsmath", "amssymb", "amsfonts", "amscd", "mathtools" },
 				},
 			},
 		},

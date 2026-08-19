@@ -11,7 +11,7 @@ return {
     opts = { lsp = { auto_attach = true } },
     keys={
 		{
-			"<leader>cs",
+			"<leader>cn",
             ":Navbuddy<CR>",
 			desc = "Navbuddy",
 		},

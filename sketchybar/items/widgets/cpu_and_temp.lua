@@ -68,7 +68,7 @@ M.cpu = sbar.add("graph", "widgets.cpu", 42, {
 })
 
 local function updateTemperature()
-	sbar.exec("~/.local/bin/smctemp/smctemp -c", function(output)
+	sbar.exec("smctemp -c", function(output)
 		local temperature = tonumber(output)
 		M.temp:push({ temperature / 130. })
 
@@ -154,9 +154,13 @@ end)
 -- })
 
 -- Background around the cpu item
+-- 纯间距 item：无玻璃效果
 sbar.add("item", "widgets.cpu.padding", {
 	position = "right",
 	width = settings.group_paddings,
+	icon = { drawing = false },
+	label = { drawing = false },
+	background = { color = colors.transparent, border_width = 0 },
 })
 
 return M

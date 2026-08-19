@@ -5,9 +5,7 @@ local icons = require("icons")
 local app_icons = require("helpers.app_icons")
 
 sbar.add("event", "SPACE_TRIGGER")
--- local max_workspaces = 10
-local query_workspaces =
-	"aerospace list-workspaces --all --format '%{workspace}%{monitor-appkit-nsscreen-screens-id}' --json"
+local max_workspaces = 10
 local workspace_monitor = {}
 
 -- Add padding to the left
@@ -38,6 +36,21 @@ sbar.add("item", {
 local workspaces = {}
 local empty_workspaces = {}
 
+local wm_adapter = {
+	cli = {
+		query_workspaces = "aerospace list-workspaces --all --format '%{workspace}%{monitor-appkit-nsscreen-screens-id}' --json",
+		query_empty_workspaces = "aerospace list-workspaces --empty --monitor all",
+		query_visible_workspaces = "aerospace list-workspaces --visible --monitor all --format '%{workspace}%{monitor-appkit-nsscreen-screens-id}' --json",
+		query_focused_workspace = "aerospace list-workspaces --focused",
+		query_windows = function(workspace_index)
+			return string.format("aerospace list-windows --workspace %s --format '%%{app-name}' --json", workspace_index)
+		end,
+		focus_workspace = function(workspace_index)
+			return string.format("aerospace workspace %s", workspace_index)
+		end,
+	},
+}
+
 local function executeShellCommand(command)
 	local handle = io.popen(command)
 	local result = handle:read("*a")
@@ -51,21 +64,39 @@ local function executeShellCommand(command)
 	return outputTable
 end
 
-local empty_workspaces_command = "aerospace list-workspaces --empty --monitor all"
-empty_workspaces_list = executeShellCommand(empty_workspaces_command)
-local max_workspaces_command = "aerospace list-workspaces --count --all"
-local max_workspaces = executeShellCommand(max_workspaces_command)
+function wm_adapter.query_workspaces(callback)
+	sbar.exec(wm_adapter.cli.query_workspaces, callback)
+end
+
+function wm_adapter.query_empty_workspaces_sync()
+	return executeShellCommand(wm_adapter.cli.query_empty_workspaces)
+end
+
+function wm_adapter.query_visible_workspaces(callback)
+	sbar.exec(wm_adapter.cli.query_visible_workspaces, callback)
+end
+
+function wm_adapter.query_focused_workspace(callback)
+	sbar.exec(wm_adapter.cli.query_focused_workspace, callback)
+end
+
+function wm_adapter.query_windows(workspace_index, callback)
+	sbar.exec(wm_adapter.cli.query_windows(workspace_index), callback)
+end
+
+function wm_adapter.focus_workspace(workspace_index)
+	sbar.exec(wm_adapter.cli.focus_workspace(workspace_index))
+end
+
+empty_workspaces_list = wm_adapter.query_empty_workspaces_sync()
+-- local max_workspaces_command = "aerospace list-workspaces --count --all"
+-- local max_workspaces = executeShellCommand(max_workspaces_command)
 -- print("empty_workspaces_list: ", table.concat(max_workspaces, ", "))
 
 local function updateWindows(workspace_index)
-	local get_windows =
-		string.format("aerospace list-windows --workspace %s --format '%%{app-name}' --json", workspace_index)
-	local query_visible_workspaces =
-		"aerospace list-workspaces --visible --monitor all --format '%{workspace}%{monitor-appkit-nsscreen-screens-id}' --json"
-	local get_focus_workspaces = "aerospace list-workspaces --focused"
-	sbar.exec(get_windows, function(open_windows)
-		sbar.exec(get_focus_workspaces, function(focused_workspaces)
-			sbar.exec(query_visible_workspaces, function(visible_workspaces)
+	wm_adapter.query_windows(workspace_index, function(open_windows)
+		wm_adapter.query_focused_workspace(function(focused_workspaces)
+			wm_adapter.query_visible_workspaces(function(visible_workspaces)
 				local icon_line = ""
 				local no_app = true
 				for i, open_window in ipairs(open_windows) do
@@ -140,7 +171,7 @@ local function updateWindows(workspace_index)
 end
 
 local function updateWorkspaceMonitor(workspace_index)
-	sbar.exec(query_workspaces, function(workspaces_and_monitors)
+	wm_adapter.query_workspaces(function(workspaces_and_monitors)
 		for _, entry in ipairs(workspaces_and_monitors) do
 			local space_index = tonumber(entry.workspace)
 			local monitor_id = math.floor(entry["monitor-appkit-nsscreen-screens-id"])
@@ -192,13 +223,11 @@ local function updateWorkspaceHover(workspace_index, trigger)
 	end
 end
 
-for workspace_index = 1, max_workspaces[1] do
+for workspace_index = 1, max_workspaces do
 	local workspace = sbar.add("item", {
 		icon = {
-			color = colors.white,
-			-- color = colors.black,
-			-- highlight_color = colors.red,
-			highlight_color = colors.aerospace_icon_highlight_color,
+			color = colors.aerospace_label_color, -- 未聚焦：暗灰
+			highlight_color = colors.aerospace_icon_highlight_color, -- 聚焦：亮灰
 			drawing = false,
 			font = { family = settings.font.numbers },
 			string = workspace_index,
@@ -207,9 +236,8 @@ for workspace_index = 1, max_workspaces[1] do
 		},
 		label = {
 			padding_right = 10,
-			-- color = colors.grey,
-			color = colors.aerospace_label_color,
-			highlight_color = colors.aerospace_label_highlight_color,
+			color = colors.aerospace_label_color, -- 未聚焦：暗灰
+			highlight_color = colors.aerospace_label_highlight_color, -- 聚焦：亮灰
 			font = "sketchybar-app-font:Regular:16.0",
 			y_offset = -1,
 		},
@@ -221,10 +249,13 @@ for workspace_index = 1, max_workspaces[1] do
 			height = 28,
 			border_color = colors.aerospace_border_color,
 		},
-		click_script = "aerospace workspace " .. workspace_index,
 	})
 
 	workspaces[workspace_index] = workspace
+
+	workspace:subscribe("mouse.clicked", function()
+		wm_adapter.focus_workspace(workspace_index)
+	end)
 
 	workspace:subscribe("aerospace_workspace_change", function(env)
 		local focused_workspace = tonumber(env.FOCUSED_WORKSPACE)
@@ -235,39 +266,41 @@ for workspace_index = 1, max_workspaces[1] do
 				icon = { highlight = is_focused },
 				label = { highlight = is_focused },
 				background = {
+					-- 聚焦时：显示极微透明白色玻璃底 + 高光白边；非聚焦：完全透明
+					color = is_focused and 0x20ffffff or colors.transparent,
 					border_width = is_focused and 1 or 0,
-				},
-				blur_radius = 20,
-			})
-		end)
-	end)
-
-	workspace:subscribe("mouse.entered", function()
-		sbar.animate("tanh", 30, function()
-			workspace:set({
-				background = {
-					color = { color = colors.grey, alpha = 0.3 },
-					border_color = { color = colors.bg1, alpha = 1.0 },
-				},
-			})
-		end)
-	end)
-
-	workspace:subscribe({ "mouse.exited", "mouse.exited.global" }, function()
-		sbar.animate("tanh", 30, function()
-			workspace:set({
-				background = {
-					color = { color = colors.transparent, alpha = 0 },
-					height = 28,
 					border_color = colors.aerospace_border_color,
 				},
+				blur_radius = 70,
 			})
 		end)
 	end)
 
+	-- workspace:subscribe("mouse.entered", function()
+	-- 	sbar.animate("tanh", 30, function()
+	-- 		workspace:set({
+	-- 			background = {
+	-- 				color = colors.with_alpha(colors.white, 0.15),
+	-- 				border_color = colors.with_alpha(colors.white, 0.35),
+	-- 			},
+	-- 		})
+	-- 	end)
+	-- end)
+
+	-- workspace:subscribe({ "mouse.exited", "mouse.exited.global" }, function()
+	-- 	sbar.animate("tanh", 30, function()
+	-- 		workspace:set({
+	-- 			background = {
+	-- 				color = colors.transparent,
+	-- 				height = 28,
+	-- 				border_color = colors.aerospace_border_color,
+	-- 			},
+	-- 		})
+	-- 	end)
+	-- end)
+
 	workspace:subscribe("SPACE_TRIGGER", function(env)
-		local command = "aerospace list-workspaces --empty --monitor all"
-		local empty_workspaces_list = executeShellCommand(command)
+		local empty_workspaces_list = wm_adapter.query_empty_workspaces_sync()
 		-- local trigger_detail = env.detail == "true"
 		if env.detail == "true" then
 			for _, index_enter in ipairs(empty_workspaces_list) do
@@ -299,12 +332,16 @@ for workspace_index = 1, max_workspaces[1] do
 	updateWorkspaceMonitor(workspace_index)
 	updateWindows(workspace_index)
 
-	sbar.exec("aerospace list-workspaces --focused", function(focused_workspace)
+	wm_adapter.query_focused_workspace(function(focused_workspace)
 		sbar.animate("sin", 15, function()
 			workspaces[tonumber(focused_workspace)]:set({
 				icon = { highlight = true },
 				label = { highlight = true },
-				background = { border_width = 1 },
+				background = {
+					color = 0x20ffffff,
+					border_width = 1,
+					border_color = colors.aerospace_border_color,
+				},
 			})
 		end)
 	end)

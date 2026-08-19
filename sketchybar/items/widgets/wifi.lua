@@ -157,7 +157,14 @@ local router = sbar.add("item", {
 	},
 })
 
-sbar.add("item", { position = "right", width = settings.group_paddings })
+-- 纯间距 item：无玻璃效果
+sbar.add("item", {
+	position = "right",
+	width = settings.group_paddings,
+	icon = { drawing = false },
+	label = { drawing = false },
+	background = { color = colors.transparent, border_width = 0 },
+})
 
 M.wifi_up:subscribe("network_update", function(env)
 	local up_color = (env.upload == "000 Bps") and colors.grey or colors.red
@@ -204,7 +211,7 @@ local function toggle_details()
 		sbar.exec("ipconfig getifaddr en0", function(result)
 			ip:set({ label = result })
 		end)
-		sbar.exec("ipconfig getsummary en0 | awk -F ' SSID : '  '/ SSID : / {print $2}'", function(result)
+		sbar.exec("networksetup -listpreferredwirelessnetworks en0 | sed -n '2p' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'", function(result)
 			ssid:set({ label = result })
 		end)
 		sbar.exec("networksetup -getinfo Wi-Fi | awk -F 'Subnet mask: ' '/^Subnet mask: / {print $2}'", function(result)

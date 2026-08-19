@@ -46,9 +46,13 @@ local volume_bracket = sbar.add("bracket", "widgets.volume.bracket", {
 	popup = { align = "center" },
 })
 
+-- 纯间距 item：无玻璃效果
 sbar.add("item", "widgets.volume.padding", {
 	position = "right",
 	width = settings.group_paddings,
+	icon = { drawing = false },
+	label = { drawing = false },
+	background = { color = colors.transparent, border_width = 0 },
 })
 
 local volume_slider = sbar.add("slider", popup_width, {

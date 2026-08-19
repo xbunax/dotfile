@@ -1,6 +1,7 @@
 local battery = require("items.widgets.battery")
 local volume = require("items.widgets.volume")
-local wechat_and_qq = require("items.widgets.wechat_and_qq")
+-- local wechat_and_qq = require("items.widgets.wechat_and_qq")
+-- local dingtalk = require("items.widgets.dingtalk")
 local wifi = require("items.widgets.wifi")
 local bluetooth = require("items.widgets.bluetooth")
 local cpu_and_temp = require("items.widgets.cpu_and_temp")
@@ -17,6 +18,15 @@ local cal = require("items.calendar")
 
 local colors = require("colors")
 
+-- 右侧外层大玻璃胶囊（包裹所有右侧 widgets）
+local glass_capsule = {
+	color = colors.bg3,        -- 10% 白色：主玻璃底
+	border_color = colors.bg2, -- 22% 白色：玻璃边缘高光
+	border_width = 1,
+	height = 30,
+	corner_radius = 12,
+}
+
 sbar.add("bracket", {
 	cpu_and_temp.cpu.name,
 	cpu_and_temp.temp.name,
@@ -26,34 +36,36 @@ sbar.add("bracket", {
 	volume.volume_icon.name,
 	volume.volume_percent.name,
 	bluetooth.bluetooth_icon.name,
-	wechat_and_qq.wechat.name,
-	wechat_and_qq.qq.name,
+	-- dingtalk.Dingtalk.name,
+	-- wechat_and_qq.wechat.name,
+	-- wechat_and_qq.qq.name,
 	cal.cal.name,
 	weather.weather_icon.name,
 	battery.battery.name,
-}, {
-	background = {
-		color = colors.bg3,
-		border_color = colors.bg3,
-		border_width = 1,
-		height = 30,
-		corner_radius = 10,
-	},
-})
+}, { background = glass_capsule })
 
+-- 右侧内层嵌套子胶囊（bt/vol/dt/cal/weather：信息控制类）
+-- 稍深一点，形成视觉层次感
 sbar.add("bracket", {
 	bluetooth.bluetooth_icon.name,
 	volume.volume_icon.name,
 	volume.volume_percent.name,
-	wechat_and_qq.wechat.name,
-	wechat_and_qq.qq.name,
+	-- dingtalk.Dingtalk.name,
+	-- wechat_and_qq.wechat.name,
+	-- wechat_and_qq.qq.name,
 	cal.cal.name,
 	weather.weather_icon.name,
-}, { background = {
-	color = 0x90494d64,
-	height = 25,
-} })
+}, {
+	background = {
+		color = colors.bg1,        -- 12% 白色：内层更深一点
+		border_color = colors.bg2,
+		border_width = 1,
+		height = 26,
+		corner_radius = 9,
+	},
+})
 
+-- 左侧玻璃胶囊（Apple 图标 + 工作区）
 sbar.add("bracket", {
 	apple.apple.name,
 	workspaces[1].name,
@@ -70,20 +82,4 @@ sbar.add("bracket", {
 	-- media.media_artist.name,
 	-- media.media_title.name,
 	-- front_app.front_app.name,
-}, {
-	background = {
-		color = colors.bg3,
-		border_color = colors.bg3,
-		border_width = 1,
-		height = 30,
-		corner_radius = 10,
-		-- padding_right = 200,
-		-- padding_left = 0,
-	},
-})
--- sbar.add("bracket", {
--- 	apple.apple.name,
--- }, { background = {
--- 	color = 0x90494d64,
--- 	height = 25,
--- } })
+}, { background = glass_capsule })

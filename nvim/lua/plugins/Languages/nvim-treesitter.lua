@@ -1,38 +1,27 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
+	branch = "main",
 	build = ":TSUpdate",
-	event = { "BufReadPost", "BufNewFile" },
-	config = function()
-		---@diagnostic disable-next-line: missing-fields
-		require("nvim-treesitter.configs").setup({
-			ensure_installed = {
-				"bash",
-				"python",
-				"cpp",
-				"diff",
-				"html",
-				"xml",
-				"lua",
-				"luadoc",
-				"markdown",
-				"markdown_inline",
-				"query",
-				"vim",
-				"vimdoc",
-			},
-			ignore_install = {
-				"latex",
-			},
-			auto_install = true,
-			highlight = {
-				enable = true,
-				disable = { "latex" },
-				additional_vim_regex_highlighting = { "ruby" },
-			},
-			disable = function(lang, bufnr)
-				return lang == "yaml" and vim.api.nvim_buf_line_count(bufnr) > 5000
-			end,
-			indent = { enable = true, disable = { "ruby" } },
-		})
+	event = { "BufReadPre", "VeryLazy" },
+	opts = {
+		install_dir = vim.fn.stdpath("data") .. "/site",
+		ensure_installed = {
+			"bash",
+			"python",
+			"diff",
+			"xml",
+			"lua",
+			"luadoc",
+			"vim",
+			"vimdoc",
+		},
+		ignore_install = {
+			"latex",
+		},
+		auto_install = true,
+	},
+	config = function(_, opts)
+		local TS = require("nvim-treesitter")
+		TS.setup(opts)
 	end,
 }

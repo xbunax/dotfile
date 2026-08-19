@@ -5,7 +5,7 @@ return {
   -- ft = { "typst" },
   config = function()
     vim.cmd([[
-      let g:wildfire_objects = ["i'", 'i"', "i)", "i]", "i}", "ip", "it","i`","i$"]
+      let g:wildfire_objects = ["i'", 'i"', "i)", "i]", "i}", "ip", "it","i`","i$","i**"]
       ]])
   end,
 }

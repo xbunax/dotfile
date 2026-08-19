@@ -27,7 +27,7 @@ for i = 1, max_items, 1 do
 			padding_left = 6,
 			padding_right = 6,
 		},
-		click_script = "$CONFIG_DIR/helpers/menus/bin/menus -s " .. i,
+		click_script = "~/.config/helpers/menus/bin/menus -s " .. i,
 	})
 
 	menu_items[i] = menu
@@ -43,7 +43,7 @@ local menu_padding = sbar.add("item", "menu.padding", {
 })
 
 local function update_menus(env)
-	sbar.exec("$CONFIG_DIR/helpers/menus/bin/menus -l", function(menus)
+	sbar.exec("~/.config/sketchybar/helpers/menus/bin/menus -l", function(menus)
 		sbar.set("/menu\\..*/", { drawing = false })
 		menu_padding:set({ drawing = true })
 		id = 1

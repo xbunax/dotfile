@@ -17,9 +17,7 @@ M.apple = sbar.add("item", {
 	},
 	label = { drawing = false },
 	background = {
-		-- color = colors.bg3,
-		border_color = colors.black,
-		border_width = 1,
+		border_width = 0, -- 透明，由外层 bracket 玻璃胶囊提供容器
 	},
 	padding_left = 3,
 	padding_right = 0,

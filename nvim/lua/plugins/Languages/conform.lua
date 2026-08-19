@@ -4,10 +4,14 @@ return {
 		formatters_by_ft = {
 			lua = { "stylua", lsp_format = "fallback" },
 			zsh = { "shfmt", lsp_format = "fallback" },
+			sh = { "beautysh", lsp_format = "fallback" },
 			-- Conform will run multiple formatters sequentially
-			python = { formatters = "black", lsp_format = "fallback" },
+			python = { "black", lsp_format = "fallback" },
 			-- You can customize some of the format options for the filetype (:help conform.format)
 			rust = { "rustfmt", lsp_format = "fallback" },
+			json = { "prettier" },
+			markdown = { "prettier" },
+			xml = { "xmlformatter" },
 
 			-- Conform will run the first available formatter
 			-- javascript = { "prettierd", "prettier", stop_after_first = true },
